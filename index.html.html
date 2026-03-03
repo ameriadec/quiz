@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quel Evaluateur Etes-Vous ?</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--navy:#032544;--gold:#F3A300;--cyan:#48CAE4;
+--blue:#0077B6;--deep:#023E8A;--red:#C13725;--green:#2E7D32;
+--card:rgba(255,255,255,0.04);--border:rgba(72,202,228,0.12);
+--w7:rgba(255,255,255,0.7);--w4:rgba(255,255,255,0.4);--w1:rgba(255,255,255,0.1);
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--navy);color:#fff;min-height:100vh;overflow-x:hidden}
+.hide{display:none!important}
+.screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 28px}
+.btn{padding:15px 44px;border:none;border-radius:50px;font-family:Inter,sans-serif;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:1.5px;text-transform:uppercase;transition:transform 0.2s}
+.btn:hover{transform:translateY(-3px)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#e09500);color:var(--navy)}
+.btn-blue{background:linear-gradient(135deg,var(--deep),var(--blue));color:#fff}
+.btn-sm{padding:11px 22px;border-radius:12px;font-size:0.85rem}
+.trait{background:rgba(72,202,228,0.1);border:1px solid rgba(72,202,228,0.2);padding:6px 16px;border-radius:50px;font-size:0.8rem;color:var(--cyan);font-weight:600;display:inline-block;margin:3px}
+.tag{background:var(--gold);color:var(--navy);padding:7px 24px;border-radius:50px;font-size:0.78rem;font-weight:700;letter-spacing:2px;display:inline-block}
+.input{padding:13px 20px;border:2px solid var(--border);border-radius:14px;background:rgba(255,255,255,0.04);color:#fff;font-family:Inter;font-size:1rem;font-weight:600;outline:none;transition:border 0.3s}
+.input:focus{border-color:var(--cyan)}
+.input::placeholder{color:var(--w4)}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:0.07;pointer-events:none;z-index:0}
+.o1{width:500px;height:500px;background:var(--cyan);top:-200px;left:-100px;animation:drift 20s ease-in-out infinite alternate}
+.o2{width:400px;height:400px;background:var(--gold);bottom:-150px;right:-80px;animation:drift 20s ease-in-out infinite alternate-reverse}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(50px,-30px) scale(1.1)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes popIn{0%{transform:scale(0)}100%{transform:scale(1)}}
+.anim-fade{animation:fadeUp 0.5s ease both}
+
+/* ROLE */
+#roleSelect .emoji{font-size:3.5rem;margin-bottom:8px;animation:bounce 2s ease infinite}
+#roleSelect h1{font-size:clamp(2rem,5vw,3rem);font-weight:900;margin-bottom:6px;line-height:1.1}
+#roleSelect h1 span{background:linear-gradient(135deg,var(--cyan),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.role-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+
+/* FACILITATOR */
+#facilitator .top-bar{width:100%;max-width:1100px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;margin-bottom:24px}
+#facilitator .top-bar h2{font-size:1.4rem;font-weight:800}
+.pill{border-radius:50px;padding:7px 18px;font-size:0.82rem;font-weight:700;display:inline-flex;align-items:center;gap:8px}
+.pill-green{background:rgba(46,125,50,0.15);border:1px solid rgba(46,125,50,0.3);color:var(--green)}
+.pill-red{background:rgba(198,40,40,0.12);border:1px solid rgba(198,40,40,0.25);color:var(--red);cursor:pointer}
+.dot-live{width:9px;height:9px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;width:100%;max-width:1100px;margin-bottom:24px}
+@media(max-width:700px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-card{text-align:center;padding:18px 12px;transition:all 0.5s}
+.stat-card .icon{font-size:1.8rem;margin-bottom:4px}
+.stat-card .num{font-size:2rem;font-weight:900}
+.stat-card .label{font-size:0.82rem;font-weight:700;margin-bottom:4px}
+.stat-card .bar{width:100%;height:5px;background:var(--w1);border-radius:3px;overflow:hidden;margin-top:6px}
+.stat-card .bar-fill{height:100%;border-radius:3px;transition:width 0.8s ease}
+
+/* TEAM */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;width:100%;max-width:1100px;margin-bottom:24px}
+.member{text-align:center;padding:14px 8px;cursor:pointer;transition:all 0.3s}
+.member:hover{border-color:var(--cyan);transform:translateY(-3px)}
+.member.selected{border-color:var(--gold);background:rgba(243,163,0,0.06)}
+.member .m-icon{font-size:1.6rem;margin-bottom:3px}
+.member .m-name{font-size:0.85rem;font-weight:700}
+.member .m-profile{font-size:0.7rem;font-weight:600}
+
+/* DETAIL */
+.detail-panel{width:100%;max-width:1100px;margin-bottom:24px}
+.detail-panel h3{font-size:1.1rem;font-weight:800;margin-bottom:12px;color:var(--gold)}
+.detail-answers{display:flex;flex-direction:column;gap:8px}
+.detail-row{display:flex;gap:12px;align-items:flex-start;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02)}
+.detail-row .dr-num{min-width:28px;height:28px;border-radius:50%;background:var(--w1);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;color:var(--w7)}
+.detail-row .dr-text{font-size:0.85rem;color:var(--w7);line-height:1.4;flex:1}
+.detail-row .dr-tag{font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:50px;white-space:nowrap}
+
+/* ANALYTICS */
+.q-analysis{margin-bottom:18px;padding:16px 20px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid var(--border)}
+.q-analysis .qa-title{font-size:0.9rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.qa-bars{display:flex;flex-direction:column;gap:6px}
+.qa-bar-row{display:flex;align-items:center;gap:10px;font-size:0.8rem}
+.qa-bar-row .qa-label{min-width:90px;font-weight:600}
+.qa-bar-row .qa-track{flex:1;height:22px;background:var(--w1);border-radius:6px;overflow:hidden}
+.qa-bar-row .qa-fill{height:100%;border-radius:6px;transition:width 0.6s;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:0.7rem;font-weight:700;color:#fff}
+.qa-bar-row .qa-pct{min-width:36px;text-align:right;color:var(--w4);font-weight:700}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--w1);border-radius:12px;padding:4px;width:fit-content}
+.tab{padding:9px 22px;border-radius:10px;font-size:0.82rem;font-weight:700;cursor:pointer;color:var(--w4);border:none;background:transparent;font-family:Inter;transition:all 0.2s}
+.tab.active{background:var(--deep);color:#fff}
+.tab:hover:not(.active){color:var(--w7)}
+
+/* CHOICE */
+.choice{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;transition:all 0.25s}
+.choice:hover{background:rgba(72,202,228,0.08);border-color:var(--cyan);transform:translateX(4px)}
+.choice.picked{background:rgba(72,202,228,0.15);border-color:var(--cyan)}
+.choice.dimmed{opacity:0.35;pointer-events:none}
+.choice .letter{min-width:30px;height:30px;border-radius:8px;background:var(--w1);color:var(--cyan);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.8rem;transition:all 0.25s}
+.choice.picked .letter{background:var(--cyan);color:var(--navy)}
+.choice .c-text{font-size:0.88rem;color:var(--w7);line-height:1.4}
+
+/* RESULT */
+#resultScreen .r-icon{font-size:4rem;margin-bottom:8px;animation:popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275)}
+#resultScreen .r-name{font-size:2rem;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.insight-box{background:rgba(243,163,0,0.06);border:1px solid rgba(243,163,0,0.15);border-left:4px solid var(--gold);border-radius:0 14px 14px 0;padding:16px 22px;max-width:560px;text-align:left;margin-bottom:20px}
+.insight-box h4{color:var(--gold);font-size:0.78rem;font-weight:700;letter-spacing:1px;margin-bottom:6px}
+.insight-box p{color:var(--w7);font-size:0.88rem;line-height:1.6}
+
+/* WAITING */
+.waiting{text-align:center;margin-top:30px;padding:30px}
+.waiting .w-icon{font-size:2.5rem;margin-bottom:10px}
+.team-msg{text-align:center;padding:24px 30px;max-width:800px;margin:0 auto 20px}
+.team-msg p{color:var(--w7);font-size:0.95rem;line-height:1.7}
+.team-msg strong{color:var(--gold)}
+
+/* SETUP */
+.setup-step{margin-bottom:12px;padding:18px 22px;border-left:4px solid var(--gold)}
+.setup-step.done{border-left-color:var(--green)}
+.step-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:0.85rem}
+.step-body{margin-left:38px}
+</style>
+</head>
+<body>
+<div class="orb o1"></div><div class="orb o2"></div>
+
+<!-- ═══════════ ROLE SELECT ═══════════ -->
+<div id="roleSelect" class="screen">
+  <div class="emoji" style="font-size:3.5rem;margin-bottom:8px;animation:bounce 2s ease infinite">🧠</div>
+  <div class="tag" style="margin-bottom:18px">ICEBREAKER — FORMATION COBIT 2019</div>
+  <h1 style="font-size:clamp(2rem,5vw,3rem);font-weight:900;margin-bottom:6px;line-height:1.1;text-align:center">Quel <span style="background:linear-gradient(135deg,var(--cyan),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Evaluateur</span><br>Etes-Vous ?</h1>
+  <p style="color:var(--w7);font-size:clamp(0.85rem,2.5vw,1.05rem);max-width:520px;text-align:center;line-height:1.6;margin:16px 0 28px">6 mises en situation reelles d'evaluation de maturite DSI.<br>Decouvrez votre profil d'evaluateur et la composition de votre equipe !</p>
+  <div class="role-btns">
+    <button class="btn btn-gold" onclick="goFacilitator()">🎓 Je suis Formateur</button>
+    <button class="btn btn-blue" onclick="goName()">📱 Je suis Participant</button>
+  </div>
+</div>
+
+<!-- ═══════════ FACILITATOR SETUP ═══════════ -->
+<div id="setupScreen" class="screen hide" style="justify-content:flex-start;padding-top:30px">
+  <div style="max-width:650px;width:100%">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:2rem;margin-bottom:6px">⚙️</div>
+      <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:6px">Configuration rapide</h2>
+      <p style="color:var(--w7);font-size:0.9rem">Creez votre session en 2 minutes, une seule fois.</p>
+    </div>
+
+    <!-- Step 1: Firebase -->
+    <div class="card setup-step" id="step1">
+      <div class="step-head">
+        <div class="step-num" style="background:var(--gold);color:var(--navy)">1</div>
+        <strong style="font-size:0.95rem">Creez une base de donnees gratuite (Firebase)</strong>
+      </div>
+      <div class="step-body">
+        <p style="color:var(--w7);font-size:0.85rem;line-height:1.7;margin-bottom:12px">
+          C'est ce qui permet aux telephones des participants d'envoyer leurs reponses a votre ecran en temps reel.
+        </p>
+        <div class="card" style="background:rgba(72,202,228,0.04);border-color:rgba(72,202,228,0.15);padding:14px 18px;margin-bottom:10px">
+          <p style="color:var(--cyan);font-size:0.82rem;font-weight:700;margin-bottom:8px">📋 Marche a suivre (5 minutes, une seule fois) :</p>
+          <p style="color:var(--w7);font-size:0.82rem;line-height:2">
+            1. Allez sur <a href="https://console.firebase.google.com/" target="_blank" style="color:var(--cyan);font-weight:700">console.firebase.google.com</a> (connectez-vous avec votre compte Google)<br>
+            2. Cliquez <strong style="color:#fff">Ajouter un projet</strong> → donnez-lui un nom (ex: "quiz-cobit") → cliquez Continuer → Creer<br>
+            3. Dans le menu a gauche, cliquez <strong style="color:#fff">Build</strong> puis <strong style="color:#fff">Realtime Database</strong><br>
+            4. Cliquez <strong style="color:#fff">Creer une base de donnees</strong> → choisissez un emplacement → <strong style="color:#fff">Demarrer en mode test</strong> → Activer<br>
+            5. Vous voyez une URL en haut du type :<br>
+            <code style="background:var(--w1);padding:4px 10px;border-radius:6px;color:var(--gold);font-size:0.85rem">https://quiz-cobit-xxxxx-default-rtdb.firebaseio.com</code><br>
+            6. Copiez cette URL et collez-la ci-dessous :
+          </p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input type="text" class="input" id="firebaseUrlInput" placeholder="https://votre-projet-default-rtdb.firebaseio.com" style="flex:1;min-width:280px;font-size:0.82rem">
+          <button class="btn btn-gold btn-sm" onclick="testFirebase()">Tester ✓</button>
+        </div>
+        <p id="firebaseStatus" style="font-size:0.78rem;margin-top:6px;color:var(--w4)"></p>
+      </div>
+    </div>
+
+    <!-- Step 2: Hosting -->
+    <div class="card setup-step" id="step2">
+      <div class="step-head">
+        <div class="step-num" style="background:var(--gold);color:var(--navy)">2</div>
+        <strong style="font-size:0.95rem">Mettez le fichier en ligne (pour que les telephones y accedent)</strong>
+      </div>
+      <div class="step-body">
+        <p style="color:var(--w7);font-size:0.85rem;line-height:1.7;margin-bottom:10px">
+          Utilisez <strong style="color:var(--cyan)">Firebase Hosting</strong> (puisque vous avez deja le projet) ou n'importe quel hebergement.
+        </p>
+        <div class="card" style="background:rgba(243,163,0,0.04);border-color:rgba(243,163,0,0.15);padding:14px 18px;margin-bottom:10px">
+          <p style="color:var(--gold);font-size:0.82rem;font-weight:700;margin-bottom:8px">💡 Methode la plus simple : utilisez le site tel quel</p>
+          <p style="color:var(--w7);font-size:0.82rem;line-height:1.8">
+            Si vous lisez ceci, c'est que le fichier est deja ouvert dans votre navigateur.<br>
+            Copiez l'URL de <strong style="color:#fff">cette page</strong> telle qu'elle apparait dans la barre d'adresse :<br>
+          </p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <input type="text" class="input" id="siteUrlInput" placeholder="Collez l'URL de cette page ici" style="flex:1;min-width:260px;font-size:0.82rem">
+            <button class="btn btn-sm" style="background:var(--w1);color:var(--cyan);border:1px solid rgba(72,202,228,0.2)" onclick="document.getElementById('siteUrlInput').value=window.location.href.split('?')[0]">Auto-remplir</button>
+          </div>
+        </div>
+        <p style="color:var(--w4);font-size:0.78rem;margin-top:6px">⚠️ Si l'URL commence par <strong>file:///</strong>, les telephones ne pourront pas y acceder. Il faut l'heberger en ligne.</p>
+      </div>
+    </div>
+
+    <!-- Launch -->
+    <div style="text-align:center;margin-top:20px">
+      <button class="btn btn-gold" onclick="launchDashboard()">🚀 Lancer le dashboard</button>
+      <p id="launchError" style="font-size:0.82rem;color:var(--red);margin-top:8px"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ FACILITATOR DASHBOARD ═══════════ -->
+<div id="facilitator" class="screen hide" style="justify-content:flex-start;padding-top:24px">
+  <div class="top-bar" style="width:100%;max-width:1100px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;margin-bottom:24px">
+    <div>
+      <div class="tag" style="margin-bottom:6px;font-size:0.7rem">DASHBOARD FORMATEUR</div>
+      <h2 style="font-size:1.4rem;font-weight:800">Quel Evaluateur Etes-Vous ?</h2>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="pill pill-green"><div class="dot-live"></div><span id="countPill">0 participants</span></div>
+      <div class="pill pill-red" onclick="resetAll()">🗑 Reset</div>
+    </div>
+  </div>
+
+  <!-- QR -->
+  <div class="card" id="qrSection" style="display:flex;gap:28px;align-items:center;flex-wrap:wrap;justify-content:center;width:100%;max-width:1100px;margin-bottom:24px">
+    <div id="qrCode" style="background:#fff;padding:20px;border-radius:16px"></div>
+    <div style="max-width:350px">
+      <h3 style="color:var(--gold);font-size:1.1rem;margin-bottom:8px">📱 Scannez pour participer !</h3>
+      <p style="color:var(--w7);font-size:0.9rem;line-height:1.6;margin-bottom:10px">Les participants scannent ce QR code, entrent leur prenom et repondent aux 6 mises en situation.</p>
+      <div id="linkBox" onclick="copyLink()" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:0.78rem;color:var(--cyan);word-break:break-all;cursor:pointer"></div>
+      <p style="font-size:0.72rem;color:var(--w4);margin-top:6px" id="copyMsg"></p>
+      <button class="btn btn-sm" style="margin-top:10px;padding:8px 14px;font-size:0.72rem;background:rgba(72,202,228,0.1);color:var(--cyan);border:1px solid rgba(72,202,228,0.2)" onclick="document.getElementById('qrSection').style.display='none'">Masquer le QR</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('overview',this)">Vue d'ensemble</button>
+    <button class="tab" onclick="switchTab('details',this)">Detail participants</button>
+    <button class="tab" onclick="switchTab('analytics',this)">Analyse par question</button>
+  </div>
+
+  <div id="tab-overview" style="width:100%;max-width:1100px">
+    <div class="stats-grid" id="statsGrid"></div>
+    <div id="teamSection"></div>
+  </div>
+  <div id="tab-details" class="hide" style="width:100%;max-width:1100px">
+    <div class="team-grid" id="detailGrid"></div>
+    <div class="detail-panel" id="detailPanel"></div>
+  </div>
+  <div id="tab-analytics" class="hide" style="width:100%;max-width:1100px">
+    <div id="analyticsSection"></div>
+  </div>
+
+  <div id="waitingMsg" class="waiting card" style="width:100%;max-width:1100px">
+    <div class="w-icon">📱</div>
+    <p>En attente des participants...<br><span style="color:var(--cyan);font-weight:600">Projetez le QR code</span> et attendez que tout le monde reponde.</p>
+  </div>
+  <div id="teamMsg" class="team-msg card hide" style="width:100%;max-width:1100px">
+    <p>Une bonne equipe d'evaluation a besoin de <strong>tous les profils</strong>.<br>Le Diplomate ouvre les portes, l'Analyste creuse, le Stratege synthetise, le Challenger recadre.<br><strong>Vos differences sont votre force sur le terrain.</strong></p>
+  </div>
+</div>
+
+<!-- ═══════════ PARTICIPANT: NAME ═══════════ -->
+<div id="nameScreen" class="screen hide">
+  <div style="font-size:3rem;margin-bottom:10px">👋</div>
+  <h2 style="font-size:1.8rem;font-weight:800;margin-bottom:6px">Bienvenue !</h2>
+  <p style="color:var(--w7);margin-bottom:24px;font-size:0.95rem">Entrez votre prenom pour commencer</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+    <input type="text" class="input" id="nameInput" placeholder="Votre prenom..." maxlength="30" style="width:260px" onkeydown="if(event.key==='Enter')startQuiz()">
+    <button class="btn btn-gold btn-sm" onclick="startQuiz()">C'est parti !</button>
+  </div>
+</div>
+
+<!-- ═══════════ PARTICIPANT: QUIZ ═══════════ -->
+<div id="quizScreen" class="screen hide" style="justify-content:flex-start;padding-top:24px">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+    <div id="qNum" style="background:var(--gold);color:var(--navy);width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:900"></div>
+    <span style="color:var(--w4);font-size:0.78rem;font-weight:600;letter-spacing:2px" id="qLabel"></span>
+  </div>
+  <div style="width:100%;max-width:340px;height:5px;background:var(--w1);border-radius:3px;margin-bottom:22px;overflow:hidden">
+    <div id="qProgress" style="height:100%;background:linear-gradient(90deg,var(--cyan),var(--gold));border-radius:3px;transition:width 0.5s"></div>
+  </div>
+  <div class="card" style="width:100%;max-width:640px;text-align:center;margin-bottom:18px">
+    <div id="qEmoji" style="font-size:2rem;margin-bottom:6px"></div>
+    <div id="qSituation" style="font-size:1.05rem;font-weight:700;margin-bottom:6px"></div>
+    <div id="qDetail" style="font-size:0.88rem;color:var(--w7);line-height:1.45"></div>
+  </div>
+  <p style="color:var(--gold);font-weight:700;font-size:0.85rem;margin-bottom:14px">Quelle est votre reaction ?</p>
+  <div id="choicesBox" style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:640px"></div>
+</div>
+
+<!-- ═══════════ PARTICIPANT: RESULT ═══════════ -->
+<div id="resultScreen" class="screen hide">
+  <div class="r-icon" id="rIcon" style="font-size:4rem;margin-bottom:8px;animation:popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275)"></div>
+  <div class="r-name" id="rName" style="font-size:2rem;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px"></div>
+  <div id="rSub" style="color:var(--w7);font-size:0.95rem;margin-bottom:20px"></div>
+  <div class="card" style="max-width:560px;text-align:center;margin-bottom:16px">
+    <p id="rDesc" style="color:var(--w7);font-size:0.92rem;line-height:1.7;margin-bottom:14px"></p>
+    <div id="rTraits"></div>
+  </div>
+  <div class="insight-box">
+    <h4 style="text-transform:uppercase">VOTRE VALEUR DANS L'EQUIPE</h4>
+    <p id="rInsight"></p>
+  </div>
+  <div style="color:var(--green);font-weight:700;font-size:1rem;margin-top:16px">✓ Resultat envoye ! Regardez l'ecran du formateur.</div>
+</div>
+
+<script>
+// ═══════════ DATA ═══════════
+const scenarios=[
+{emoji:"😤",situation:"Le DSI est sur la defensive",detail:"Vous arrivez pour l'entretien. Le DSI croise les bras : \"Encore une evaluation ? Ca ne change jamais rien.\"",choices:[
+{text:"Empathie d'abord — \"Je comprends. On est la pour valoriser ce qui marche.\"",profile:"diplomate"},
+{text:"Cadrage factuel — \"Montrez-moi vos resultats, on fera un constat objectif.\"",profile:"analyste"},
+{text:"Vision strategique — \"Cette evaluation nourrit une vision nationale.\"",profile:"stratege"},
+{text:"Franchise — \"Si 3 audits n'ont rien change, c'est qu'il manquait un referentiel adapte.\"",profile:"challenger"}]},
+{emoji:"📊",situation:"Le DSI survend sa maturite",detail:"En scoring Securite, le DSI dit : \"On est niveau 4, on a un antivirus partout.\" Mais aucune politique formalisee.",choices:[
+{text:"Question ouverte — \"Pourriez-vous me montrer votre politique ecrite ?\"",profile:"diplomate"},
+{text:"Grille en main — \"Regardons les criteres du niveau 3 point par point.\"",profile:"analyste"},
+{text:"Perspective — \"Un antivirus c'est niveau 1-2. Le 4 suppose des metriques.\"",profile:"stratege"},
+{text:"Confrontation — \"Sans PSSI, on est sous le 3. C'est le referentiel.\"",profile:"challenger"}]},
+{emoji:"😔",situation:"Le DSI est decourage",detail:"A mi-parcours, le DSI soupire : \"On n'a que 4 personnes, pas de budget. Mettez 0 partout.\"",choices:[
+{text:"Encouragement — \"Avec 4 personnes vous faites tourner le SI, bravo.\"",profile:"diplomate"},
+{text:"Methode — \"Un 0 = rien du tout. Or vous avez des serveurs. Reprenons.\"",profile:"analyste"},
+{text:"Levier — \"Un diagnostic precis est le meilleur outil pour debloquer des ressources.\"",profile:"stratege"},
+{text:"Realisme — \"Un 1 honnete vaut mieux qu'un 0 decourage.\"",profile:"challenger"}]},
+{emoji:"⚖️",situation:"Desaccord entre evaluateurs",detail:"En calibration, votre collegue met 3 en Gouvernance, vous avez mis 1. Il faut trancher.",choices:[
+{text:"Mediation — \"Reprenons les preuves ensemble, sans a priori.\"",profile:"diplomate"},
+{text:"Preuves — \"Listons les documents. Le score decoule des criteres.\"",profile:"analyste"},
+{text:"Precedent — \"Cet ecart aide a affiner nos criteres pour la suite.\"",profile:"stratege"},
+{text:"Tranchant — \"Un 3 suppose un schema directeur formalise. Il y en avait ?\"",profile:"challenger"}]},
+{emoji:"💡",situation:"On vous demande des conseils",detail:"Fin d'entretien, le DSI demande : \"Qu'est-ce que vous nous conseillez en priorite ?\"",choices:[
+{text:"Retourner — \"Bonne question. Vous, quelle serait votre priorite ?\"",profile:"diplomate"},
+{text:"Prudence — \"Attendons les resultats consolides avant de recommander.\"",profile:"analyste"},
+{text:"Quick win — \"Formalisez une feuille de route SI simple, gros impact.\"",profile:"stratege"},
+{text:"Cadre — \"Notre mandat est d'evaluer. Le rapport donnera les leviers.\"",profile:"challenger"}]},
+{emoji:"🎓",situation:"Restitution au COPIL",detail:"7 DSI sur 10 sous le niveau 2. Le Directeur demande : \"Qui est responsable ?\"",choices:[
+{text:"Desamorcer — \"La question est comment avancer, pas qui est responsable.\"",profile:"diplomate"},
+{text:"Factuel — \"Voici la correlation entre moyens alloues et niveaux.\"",profile:"analyste"},
+{text:"Vision — \"Ce diagnostic permet de prioriser les investissements.\"",profile:"stratege"},
+{text:"Verite — \"La maturite se construit avec du portage politique. A vous.\"",profile:"challenger"}]}
+];
+const profiles={
+diplomate:{icon:"🤝",name:"Le Diplomate",color:"#48CAE4",subtitle:"L'art de faire parler sans braquer",traits:["Ecoute active","Empathie","Confiance","Reformulation"],desc:"Vous creez un climat de confiance. Les DSI s'ouvrent a vous. Votre defi : ne pas eviter les sujets qui fachent.",insight:"Ideal pour les premiers contacts et desamorcer les tensions. En binome avec un Analyste, duo redoutable."},
+analyste:{icon:"🔍",name:"L'Analyste",color:"#0077B6",subtitle:"Les preuves avant les impressions",traits:["Rigueur","Documentation","Objectivite","Detail"],desc:"Vos evaluations sont inattaquables. Votre defi : ne pas transformer l'entretien en interrogatoire.",insight:"Colonne vertebrale de la credibilite. Scores fondes, reproductibles et defendables."},
+stratege:{icon:"🎯",name:"Le Stratege",color:"#F3A300",subtitle:"Voir au-dela du score",traits:["Vision","Synthese","Impact","Decision"],desc:"Un score est un levier, pas une fin. Vous donnez du sens. Votre defi : ne pas sauter aux conclusions.",insight:"Precieux pour la restitution et le ranking. Vous transformez les scores en feuille de route."},
+challenger:{icon:"⚡",name:"Le Challenger",color:"#C13725",subtitle:"La verite, meme quand ca pique",traits:["Franchise","Courage","Exigence","Calibration"],desc:"Quand un DSI se survend, vous recentrez. Votre defi : doser la franchise.",insight:"Garde-fou de la rigueur. Sans vous, les scores derivent vers la complaisance."}
+};
+
+// ═══════════ FIREBASE REST API ═══════════
+let FIREBASE_URL='';
+const SESSION_ID='session_'+Date.now().toString(36);
+
+async function fbGet(path){
+  const r=await fetch(FIREBASE_URL+'/icebreaker/'+path+'.json');
+  return r.ok?await r.json():null;
+}
+async function fbSet(path,data){
+  await fetch(FIREBASE_URL+'/icebreaker/'+path+'.json',{method:'PUT',body:JSON.stringify(data),headers:{'Content-Type':'application/json'}});
+}
+async function fbDelete(path){
+  await fetch(FIREBASE_URL+'/icebreaker/'+path+'.json',{method:'DELETE'});
+}
+
+// ═══════════ NAV ═══════════
+function showOnly(id){document.querySelectorAll('.screen').forEach(s=>{s.classList.add('hide')});document.getElementById(id).classList.remove('hide')}
+
+function goFacilitator(){
+  const saved=localStorage.getItem('icebreaker-firebase-url');
+  if(saved){document.getElementById('firebaseUrlInput').value=saved}
+  const savedSite=localStorage.getItem('icebreaker-site-url');
+  if(savedSite){document.getElementById('siteUrlInput').value=savedSite}
+  showOnly('setupScreen');
+}
+
+function goName(){showOnly('nameScreen');setTimeout(()=>document.getElementById('nameInput').focus(),100)}
+
+// ═══════════ SETUP ═══════════
+async function testFirebase(){
+  const url=document.getElementById('firebaseUrlInput').value.trim().replace(/\/$/,'');
+  const status=document.getElementById('firebaseStatus');
+  if(!url||(!url.includes('firebaseio.com')&&!url.includes('firebasedatabase.app'))){status.style.color='var(--red)';status.textContent='❌ URL invalide. Elle doit contenir firebaseio.com ou firebasedatabase.app';return}
+  status.style.color='var(--w4)';status.textContent='Test en cours...';
+  try{
+    FIREBASE_URL=url;
+    await fbSet('_test',{ok:true,t:Date.now()});
+    const check=await fbGet('_test');
+    if(check&&check.ok){
+      status.style.color='var(--green)';status.textContent='✅ Connexion reussie ! La base fonctionne.';
+      localStorage.setItem('icebreaker-firebase-url',url);
+      document.getElementById('step1').classList.add('done');
+      document.getElementById('step1').style.borderLeftColor='var(--green)';
+    }else throw new Error('read fail');
+  }catch(e){status.style.color='var(--red)';status.textContent='❌ Echec. Verifiez l\'URL et que le mode test est active.'}
+}
+
+function launchDashboard(){
+  const fbUrl=document.getElementById('firebaseUrlInput').value.trim().replace(/\/$/,'');
+  const siteUrl=document.getElementById('siteUrlInput').value.trim();
+  const err=document.getElementById('launchError');
+  if(!fbUrl||(!fbUrl.includes('firebaseio.com')&&!fbUrl.includes('firebasedatabase.app'))){err.textContent='Veuillez d\'abord configurer Firebase (etape 1)';return}
+  if(!siteUrl){err.textContent='Veuillez coller l\'URL du site (etape 2)';return}
+  FIREBASE_URL=fbUrl;
+  localStorage.setItem('icebreaker-firebase-url',fbUrl);
+  localStorage.setItem('icebreaker-site-url',siteUrl);
+  
+  // Generate QR
+  const participantUrl=siteUrl.split('?')[0]+(siteUrl.includes('?')?'&':'?')+'role=participant&fb='+encodeURIComponent(fbUrl);
+  document.getElementById('qrCode').innerHTML='';
+  new QRCode(document.getElementById('qrCode'),{text:participantUrl,width:200,height:200,colorDark:"#032544",colorLight:"#ffffff"});
+  document.getElementById('linkBox').textContent=participantUrl;
+  
+  showOnly('facilitator');
+  refreshDashboard();
+  clearInterval(refreshTimer);
+  refreshTimer=setInterval(refreshDashboard,3000);
+}
+
+let refreshTimer;
+function copyLink(){
+  const t=document.getElementById('linkBox').textContent;
+  navigator.clipboard.writeText(t).then(()=>{document.getElementById('copyMsg').textContent='✓ Copie !';setTimeout(()=>document.getElementById('copyMsg').textContent='',2000)}).catch(()=>{})
+}
+
+// ═══════════ DASHBOARD ═══════════
+let allResults=[];
+let selectedMember=null;
+
+async function refreshDashboard(){
+  try{
+    const raw=await fbGet('results');
+    allResults=raw?Object.values(raw):[];
+  }catch{return}
+  const data=allResults;
+  const total=data.length;
+  document.getElementById('countPill').textContent=total+' participant'+(total!==1?'s':'');
+  document.getElementById('waitingMsg').classList.toggle('hide',total>0);
+  document.getElementById('teamMsg').classList.toggle('hide',total<3);
+  
+  const counts={diplomate:0,analyste:0,stratege:0,challenger:0};
+  data.forEach(d=>{if(counts[d.profile]!==undefined)counts[d.profile]++});
+  
+  let statsH='';
+  for(const[k,p]of Object.entries(profiles)){
+    const pct=total>0?Math.round(counts[k]/total*100):0;
+    statsH+=`<div class="card stat-card" style="border-color:${counts[k]>0?p.color+'44':'var(--border)'}"><div class="icon">${p.icon}</div><div class="num" style="color:${p.color}">${counts[k]}</div><div class="label">${p.name}</div><div class="bar"><div class="bar-fill" style="width:${pct}%;background:${p.color}"></div></div><div style="font-size:0.72rem;color:var(--w4);margin-top:3px">${pct}%</div></div>`;
+  }
+  document.getElementById('statsGrid').innerHTML=statsH;
+  
+  // Team
+  let tH='';
+  if(total>0){
+    tH='<h3 style="font-size:1.1rem;font-weight:800;color:var(--gold);margin-bottom:12px">L\'equipe ('+total+')</h3><div class="team-grid">';
+    data.forEach((d,i)=>{const p=profiles[d.profile];tH+=`<div class="card member anim-fade" style="animation-delay:${i*0.08}s"><div class="m-icon">${p.icon}</div><div class="m-name">${d.name}</div><div class="m-profile" style="color:${p.color}">${p.name}</div></div>`;});
+    tH+='</div>';
+  }
+  document.getElementById('teamSection').innerHTML=tH;
+  
+  // Detail tab
+  let dG='';
+  data.forEach((d,i)=>{const p=profiles[d.profile];dG+=`<div class="card member ${selectedMember===i?'selected':''}" onclick="selectMember(${i})"><div class="m-icon">${p.icon}</div><div class="m-name">${d.name}</div><div class="m-profile" style="color:${p.color}">${p.name}</div></div>`;});
+  document.getElementById('detailGrid').innerHTML=dG;
+  
+  if(selectedMember!==null&&data[selectedMember]){
+    const d=data[selectedMember],p=profiles[d.profile];
+    let pH=`<h3>${p.icon} ${d.name} — ${p.name}</h3><div class="detail-answers">`;
+    if(d.answers){d.answers.forEach((a,qi)=>{const s=scenarios[qi],ch=s.choices[a],cp=profiles[ch.profile];pH+=`<div class="detail-row"><div class="dr-num">${qi+1}</div><div class="dr-text"><strong>${s.situation}</strong><br>${ch.text.split('—')[0].trim()}</div><div class="dr-tag" style="background:${cp.color}22;color:${cp.color}">${cp.name.replace('Le ','').replace("L'","")}</div></div>`;});}
+    pH+='</div>';
+    document.getElementById('detailPanel').innerHTML=pH;
+  }else{document.getElementById('detailPanel').innerHTML=total>0?'<p style="color:var(--w4);font-size:0.9rem">👆 Cliquez sur un participant</p>':'';}
+  
+  // Analytics
+  if(total>0){
+    let aH='<h3 style="font-size:1.1rem;font-weight:800;color:var(--cyan);margin-bottom:14px">Repartition par situation</h3>';
+    scenarios.forEach((s,qi)=>{
+      const pc={diplomate:0,analyste:0,stratege:0,challenger:0};
+      data.forEach(d=>{if(d.answers&&d.answers[qi]!==undefined){pc[s.choices[d.answers[qi]].profile]++}});
+      const resp=Object.values(pc).reduce((a,b)=>a+b,0);
+      aH+=`<div class="q-analysis"><div class="qa-title"><span>${s.emoji}</span> Q${qi+1}: ${s.situation}</div><div class="qa-bars">`;
+      ['diplomate','analyste','stratege','challenger'].forEach(pk=>{const p=profiles[pk],c=pc[pk],pct=resp>0?Math.round(c/resp*100):0;aH+=`<div class="qa-bar-row"><div class="qa-label" style="color:${p.color}">${p.icon} ${p.name.replace('Le ','').replace("L'","")}</div><div class="qa-track"><div class="qa-fill" style="width:${pct}%;background:${p.color}">${c>0?c:''}</div></div><div class="qa-pct">${pct}%</div></div>`;});
+      aH+='</div></div>';
+    });
+    // Average
+    const ta={diplomate:0,analyste:0,stratege:0,challenger:0};
+    data.forEach(d=>{if(d.answers){d.answers.forEach((a,qi)=>{ta[scenarios[qi].choices[a].profile]++})}});
+    const tot=Object.values(ta).reduce((a,b)=>a+b,0);
+    aH+='<div class="card" style="margin-top:20px;text-align:center"><h3 style="color:var(--gold);margin-bottom:12px">Profil moyen de l\'equipe</h3><div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap">';
+    for(const[pk,p]of Object.entries(profiles)){const pct=tot>0?Math.round(ta[pk]/tot*100):0;aH+=`<div style="text-align:center"><div style="font-size:1.8rem">${p.icon}</div><div style="font-size:1.6rem;font-weight:900;color:${p.color}">${pct}%</div><div style="font-size:0.75rem;color:var(--w7)">${p.name}</div></div>`;}
+    aH+='</div></div>';
+    document.getElementById('analyticsSection').innerHTML=aH;
+  }
+}
+
+function selectMember(i){selectedMember=selectedMember===i?null:i;refreshDashboard()}
+function switchTab(tab,btn){document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');['overview','details','analytics'].forEach(t=>{document.getElementById('tab-'+t).classList.toggle('hide',t!==tab)});refreshDashboard()}
+async function resetAll(){if(confirm('Effacer tous les resultats ?')){try{await fbDelete('results')}catch{}selectedMember=null;allResults=[];refreshDashboard()}}
+
+// ═══════════ PARTICIPANT QUIZ ═══════════
+let playerName='',currentQ=0,scores={diplomate:0,analyste:0,stratege:0,challenger:0},answers=[],picking=false;
+
+function startQuiz(){
+  const n=document.getElementById('nameInput').value.trim();
+  if(!n)return document.getElementById('nameInput').focus();
+  playerName=n;currentQ=0;scores={diplomate:0,analyste:0,stratege:0,challenger:0};answers=[];
+  showOnly('quizScreen');renderQuestion();
+}
+function renderQuestion(){
+  const s=scenarios[currentQ],tot=scenarios.length,letters=['A','B','C','D'];
+  document.getElementById('qNum').textContent=currentQ+1;
+  document.getElementById('qLabel').textContent='SITUATION '+(currentQ+1)+' / '+tot;
+  document.getElementById('qProgress').style.width=((currentQ+1)/tot*100)+'%';
+  document.getElementById('qEmoji').textContent=s.emoji;
+  document.getElementById('qSituation').textContent=s.situation;
+  document.getElementById('qDetail').textContent=s.detail;
+  let h='';s.choices.forEach((c,i)=>{h+=`<div class="choice" id="ch${i}" onclick="pickChoice(${i})"><div class="letter">${letters[i]}</div><div class="c-text">${c.text}</div></div>`;});
+  document.getElementById('choicesBox').innerHTML=h;picking=false;
+}
+function pickChoice(idx){
+  if(picking)return;picking=true;
+  answers.push(idx);scores[scenarios[currentQ].choices[idx].profile]++;
+  document.querySelectorAll('.choice').forEach((c,i)=>{if(i===idx)c.classList.add('picked');else c.classList.add('dimmed');});
+  setTimeout(()=>{currentQ++;if(currentQ<scenarios.length)renderQuestion();else finishQuiz()},500);
+}
+async function finishQuiz(){
+  let max=0,top='diplomate';
+  for(const[k,v]of Object.entries(scores)){if(v>max){max=v;top=k}}
+  // Save to Firebase
+  if(FIREBASE_URL){
+    try{
+      const id=playerName.toLowerCase().replace(/\s/g,'_')+'_'+Date.now().toString(36);
+      await fbSet('results/'+id,{name:playerName,profile:top,answers,scores:{...scores},ts:Date.now()});
+    }catch(e){console.log('save error',e)}
+  }
+  const p=profiles[top];
+  document.getElementById('rIcon').textContent=p.icon;
+  document.getElementById('rName').textContent=p.name;
+  document.getElementById('rSub').textContent=p.subtitle;
+  document.getElementById('rDesc').textContent=p.desc;
+  document.getElementById('rInsight').textContent=p.insight;
+  document.getElementById('rTraits').innerHTML=p.traits.map(t=>`<span class="trait">${t}</span>`).join(' ');
+  showOnly('resultScreen');
+}
+
+// ═══════════ AUTO-DETECT ROLE FROM URL ═══════════
+window.addEventListener('DOMContentLoaded',()=>{
+  const params=new URLSearchParams(window.location.search);
+  // Participant mode: extract Firebase URL from QR link
+  const fbParam=params.get('fb');
+  if(fbParam){FIREBASE_URL=decodeURIComponent(fbParam)}
+  if(params.get('role')==='participant'){goName()}
+});
+</script>
+</body>
+</html>
